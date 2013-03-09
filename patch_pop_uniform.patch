@@ -1,0 +1,25 @@
+diff --git a/src/ecWp.ml b/src/ecWp.ml
+index 63c9ea7..64b8d4f 100644
+--- a/src/ecWp.ml
++++ b/src/ecWp.ml
+@@ -282,11 +282,19 @@ let rec wp_eq_random r1 r2 =
+ let cond_bij x y r1 r2 info =
+   let x = Ebase x in
+   let y = Ebase y in
++  (* this is for experimenting: sampling operators with the name
++     sample_uniform_* are considered as uniform *)
++  let oper_uniform op =
++    let name = (EcTerm.op_body op).op_name in
++    let uniform_prefix = "sample_uniform_" in
++    let prefix_len = String.length uniform_prefix in
++    prefix_len <= String.length name && uniform_prefix = String.sub name 0 prefix_len
++  in
+   match info, r1, r2 with
+     | AstLogic.RIidempotant _, Rapp (op,_), _
+     | AstLogic.RIidempotant _, _, Rapp (op,_) 
+     | AstLogic.RIbij _, Rapp (op,_), _
+-    | AstLogic.RIbij _, _, Rapp (op,_) -> 
++    | AstLogic.RIbij _, _, Rapp (op,_) when not (oper_uniform op) ->
+         user_error "cannot compute wp: %a may not be uniform" PpAst.pp_op op;
+     | AstLogic.RIid, _, _ -> wp_eq_random r1 r2, Fol.Ptrue, Fol.Ptrue, x
+     | AstLogic.RIidempotant (lv,f), _, _ ->
